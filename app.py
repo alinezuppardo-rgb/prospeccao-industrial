@@ -1,67 +1,68 @@
 import streamlit as st
+import pandas as pd
 import requests
 
-# Configuração da página da ferramenta interna
-st.set_page_config(page_title="Prospecção Industrial - Validação", layout="centered")
+st.set_page_config(page_title="DMP Inteligência - Prospecção Industrial", page_icon="⚡", layout="wide")
 
-st.title("🏭 Prospecção Industrial: Fila de Validação")
-st.write("Analise os dados da empresa capturada e decida se ela tem fit comercial antes de enviar para o Salesforce.")
+# Custom CSS for Econodata professional styling
+st.markdown("""
+<style>
+    .main { background-color: #f8f9fa; }
+    .stButton>button { background-color: #0d6efd; color: white; font-weight: bold; border-radius: 4px; }
+    .metric-card { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+</style>
+""", unsafe_allow_html=True)
 
-# Exemplo de dados vindos da extração (motor de busca da ferramenta)
-lead_atual = {
-    "razao_social": "Metalúrgica e Galpões Industriais Ltda",
-    "cnpj": "12.345.678/0001-99",
-    "endereco": "Rodovia SP-360, Km 45 - Itatiba/SP",
-    "segmento": "Galpão Logístico / Alta Demanda de Transformadores",
-    "produto_potencial": "Transformadores Trifásicos & Iluminação LED Industrial"
-}
+st.title("⚡ DMP Inteligência — Prospecção B2B (Indústrias & Data Centers)")
+st.markdown("Plataforma de inteligência comercial para mapeamento de indústrias, galpões logísticos e data centers.")
 
-# Caixa visual com os dados do lead
-with st.container():
-    st.info("Novo Prospect Identificado pelo Sistema")
-    st.markdown(f"### **{lead_atual['razao_social']}**")
-    st.write(f"**CNPJ:** {lead_atual['cnpj']}")
-    st.write(f"**Endereço:** {lead_atual['endereco']}")
-    st.write(f"**Segmento/Necessidade:** {lead_atual['segmento']}")
-    st.write(f"**Portfólio Sugerido:** {lead_atual['produto_potencial']}")
+# Sidebar Filters (Econodata style)
+st.sidebar.header("🔍 Filtros de Busca Avançada")
+segmento = st.sidebar.selectbox("Segmento de Mercado", ["Todos", "Indústria de Transformação", "Galpões Logísticos / Armazéns", "Data Centers", "Construção Civil Industrial"])
+regiao = st.sidebar.selectbox("Região / Estado", ["Todos", "São Paulo (SP)", "Minas Gerais (MG)", "Paraná (PR)", "Santa Catarina (SC)", "Rio Grande do Sul (RS)"])
+porte = st.sidebar.multiselect("Porte da Empresa", ["Microempresa", "Pequena Empresa", "Média Empresa", "Grande Empresa"], default=["Média Empresa", "Grande Empresa"])
+status_rf = st.sidebar.selectbox("Situação Cadastral", ["Ativa", "Todas"])
 
-st.divider()
+# Mock Database for Demape / Industrial Lighting & Transformers Prospecting
+data = [
+    {"Empresa": "Indústria Metalúrgica AçoForte S/A", "CNPJ": "12.345.678/0001-90", "Segmento": "Indústria de Transformação", "Cidade/UF": "Campinas / SP", "Porte": "Grande Empresa", "Contato Principal": "Carlos Silva (Eng. Chefe)", "Telefone": "(19) 3456-7890", "Status": "Não Contactado"},
+    {"Empresa": "Logística & Armazéns Bandeirantes Ltda", "CNPJ": "98.765.432/0001-12", "Segmento": "Galpões Logísticos / Armazéns", "Cidade/UF": "Jundiaí / SP", "Porte": "Média Empresa", "Contato Principal": "Marcos Vinícius (Manutenção)", "Telefone": "(11) 4589-1234", "Status": "Qualificado"},
+    {"Empresa": "HyperScale Data Center Brasil", "CNPJ": "45.123.789/0001-55", "Segmento": "Data Centers", "Cidade/UF": "Barueri / SP", "Porte": "Grande Empresa", "Contato Principal": "Ana Paula Souza (Infraestrutura)", "Telefone": "(11) 5555-8888", "Status": "Proposta Enviada"},
+    {"Empresa": "Têxtil Sul Mineira S/A", "CNPJ": "33.222.111/0001-88", "Segmento": "Indústria de Transformação", "Cidade/UF": "Poços de Caldas / MG", "Porte": "Grande Empresa", "Contato Principal": "Roberto Mendes (Diretor Industrial)", "Telefone": "(35) 3721-4321", "Status": "Não Contactado"},
+    {"Empresa": "Centro Logístico Rodovia dos Bandeirantes", "CNPJ": "77.888.999/0001-23", "Segmento": "Galpões Logísticos / Armazéns", "Cidade/UF": "Itatiba / SP", "Porte": "Grande Empresa", "Contato Principal": "Juliana Lima (Facilities)", "Telefone": "(11) 4892-9900", "Status": "Não Contactado"}
+]
 
-# Função que realiza a integração real com a API do Salesforce
-def enviar_para_salesforce(dados):
-    # Insira aqui as credenciais e endpoint da sua instância do Salesforce
-    instancia = "sua-instancia"
-    token = "seu-token-de-acesso"
-    
-    url = f"https://{instancia}.salesforce.com/services/data/v58.0/sobjects/Account"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "Name": dados["razao_social"],
-        "BillingStreet": dados["endereco"],
-        "Description": f"Segmento: {dados['segmento']} | Foco: {dados['produto_potencial']}",
-        "Rating": "Quente - Aprovado pelo Vendedor"
-    }
-    
-    # Executa o envio
-    # response = requests.post(url, json=payload, headers=headers)
-    # return response.status_code == 201
-    return True # Simulação de sucesso para teste visual
+df = pd.DataFrame(data)
 
-# Botões de decisão do vendedor
-col1, col2 = st.columns(2)
-
+# KPI Summary
+col1, col2, col3, col4 = st.columns(4)
 with col1:
-    if st.button("❌ Descartar (Lead Frio)", use_container_width=True):
-        st.warning("Lead descartado. O sistema carregará o próximo da fila.")
-
+    st.markdown('<div class="metric-card"><h3>5</h3><p>Empresas Filtradas</p></div>', unsafe_allow_html=True)
 with col2:
-    if st.button("✅ OK - Enviar para o Salesforce", type="primary", use_container_width=True):
-        sucesso = enviar_para_salesforce(lead_atual)
-        if sucesso:
-            st.success("Lead aprovado e integrado ao Salesforce com sucesso! Conta e tarefa criadas.")
-        else:
-            st.error("Erro ao integrar com o Salesforce. Verifique as credenciais.")
+    st.markdown('<div class="metric-card"><h3>3</h3><p>Grandes Indústrias</p></div>', unsafe_allow_html=True)
+with col3:
+    st.markdown('<div class="metric-card"><h3>2</h3><p>Data Centers / Galpões</p></div>', unsafe_allow_html=True)
+with col4:
+    st.markdown('<div class="metric-card"><h3>Pronto</h3><p>Exportação CRM</p></div>', unsafe_allow_html=True)
+
+st.markdown("---")
+st.subheader("📋 Lista de Empresas Encontradas")
+
+# Search bar
+busca = st.text_input("🔍 Buscar por nome da empresa ou CNPJ:", "")
+
+if busca:
+    df = df[df['Empresa'].str.contains(busca, case=False, na=False) | df['CNPJ'].str.contains(busca, case=False, na=False)]
+
+# Display Interactive Table
+st.dataframe(df, use_container_width=True, hide_index=True)
+
+st.markdown("---")
+col_acao1, col_acao2 = st.columns(2)
+with col_acao1:
+    if st.button("📤 Enviar Selecionados para o Salesforce"):
+        st.success("Empresas sincronizadas com sucesso para o pipeline do Salesforce!")
+with col_acao2:
+    if st.button("📥 Baixar Relatório em Excel (CSV)"):
+        st.info("Arquivo gerado pronto para download.")
             
